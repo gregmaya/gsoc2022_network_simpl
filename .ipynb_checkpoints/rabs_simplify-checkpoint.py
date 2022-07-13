@@ -5,7 +5,7 @@ from shapely.ops import linemerge
 from shapely import geometry
 import momepy as mm # outp
 
-def selecting_rabs_from_poly(gdf, circom_threshold = 0.8):
+def selecting_rabs_from_poly(gdf, circom_threshold = 0.8, include_adjacent=True):
     """
     From a GeoDataFrame of polygons, returns a GDF of polygons that are 
     above the CircularCompaactness threshold as well as those adjacent ones samller in area
@@ -22,10 +22,14 @@ def selecting_rabs_from_poly(gdf, circom_threshold = 0.8):
     #selecting round about polygons based on compactness
     rab = gdf[gdf.circom > circom_threshold]
     
-    #selecting the adjacent areas that are of smaller than itself
-    rab = gpd.sjoin(gdf, rab, predicate = 'intersects')
-    rab = rab[rab.area_right >= rab.area_left]
-    rab = rab[['geometry', 'index_right']]
+    if include_adjacent == True :
+        #selecting the adjacent areas that are of smaller than itself
+        rab = gpd.sjoin(gdf, rab, predicate = 'intersects')
+        rab = rab[rab.area_right >= rab.area_left]
+        rab = rab[['geometry', 'index_right']]
+    else:
+        rab['index_right'] = rab.index
+        rab = rab[['geometry', 'index_right']]
     
     return rab
 
@@ -148,9 +152,11 @@ def ext_lines_to_center(edges, incoming_all, rab_plus):
     
     return new_edges
 
-def roundabout_simpl(edges, polys, circom_threshold = 0.7, center_type = 'centroid', angle_threshold=0):
+def roundabout_simpl(edges, polys, 
+                     circom_threshold = 0.7, include_adjacent=True, 
+                     center_type = 'centroid', angle_threshold=0):
     
-    rab = selecting_rabs_from_poly(polys, circom_threshold = circom_threshold)
+    rab = selecting_rabs_from_poly(polys, circom_threshold = circom_threshold, include_adjacent=include_adjacent )
     rab_plus = rabs_center_points(rab, center_type = center_type)
     incoming_all = selecting_incoming_lines(rab_plus, edges, angle_threshold=angle_threshold)
     output = ext_lines_to_center(edges, incoming_all, rab_plus)
