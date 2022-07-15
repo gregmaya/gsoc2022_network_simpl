@@ -5,7 +5,7 @@ from shapely.ops import linemerge
 from shapely import geometry
 import momepy as mm # outp
 
-def selecting_rabs_from_poly(gdf, circom_threshold = 0.8, include_adjacent=True):
+def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 0.85, include_adjacent=True) :
     """
     From a GeoDataFrame of polygons, returns a GDF of polygons that are 
     above the CircularCompaactness threshold as well as those adjacent ones samller in area
@@ -21,6 +21,10 @@ def selecting_rabs_from_poly(gdf, circom_threshold = 0.8, include_adjacent=True)
     
     #selecting round about polygons based on compactness
     rab = gdf[gdf.circom > circom_threshold]
+    #exclude those above the area threshold
+    area_threshold = gdf.area.quantile(perc_area_threshold)
+    rab = rab[rab.area < area_threshold]
+    
     
     if include_adjacent == True :
         #selecting the adjacent areas that are of smaller than itself
