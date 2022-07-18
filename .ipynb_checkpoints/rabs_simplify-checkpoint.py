@@ -25,17 +25,32 @@ def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 
     area_threshold = gdf.area.quantile(perc_area_threshold)
     rab = rab[rab.area < area_threshold]
     
-    
     if include_adjacent == True :
         #selecting the adjacent areas that are of smaller than itself
-        rab = gpd.sjoin(gdf, rab, predicate = 'intersects')
-        rab = rab[rab.area_right >= rab.area_left]
-        rab = rab[['geometry', 'index_right']]
+        rab_adj = gpd.sjoin(gdf, rab, predicate = 'intersects')
+        rab_adj = rab_adj[rab_adj.area_right >= rab_adj.area_left]
+        
+        dj_long_polys = []
+        #iterate through original rabs
+        for i, row in rab.iterrows():
+            #creating a distance (diameter) for limiting the max dist of adjacent
+            minx, _ , maxx, _ = rab.loc[i].geometry.bounds 
+            rab_diameter = maxx - minx
+            #iterating through the subgroup that could be affected
+            rab_group = rab_adj[rab_adj.index_right==i]
+            for ii, rrow in rab_group.iterrows():
+                hdist = rab.loc[i].geometry.hausdorff_distance(rrow.geometry)
+                if hdist > rab_diameter :
+                    adj_long_polys.append(ii) #if hausdorff_distance is larger than the diameter add to list
+        rab_plus = rab_adj.drop(adj_long_polys)
+        
     else:
         rab['index_right'] = rab.index
-        rab = rab[['geometry', 'index_right']]
+        rab_plus = rab
     
-    return rab
+    rab_plus = rab_plus[['geometry', 'index_right']] #only keeping relevant fields
+    
+    return rab_plus
 
 def rabs_center_points(gdf, center_type = 'centroid'):
     """
@@ -157,10 +172,13 @@ def ext_lines_to_center(edges, incoming_all, rab_plus):
     return new_edges
 
 def roundabout_simpl(edges, polys, 
-                     circom_threshold = 0.7, include_adjacent=True, 
+                     circom_threshold = 0.7, perc_area_threshold = 0.85, include_adjacent=True, 
                      center_type = 'centroid', angle_threshold=0):
     
-    rab = selecting_rabs_from_poly(polys, circom_threshold = circom_threshold, include_adjacent=include_adjacent )
+    rab = selecting_rabs_from_poly(polys, 
+                                   circom_threshold = circom_threshold,
+                                   perc_area_threshold = perc_area_threshold,
+                                   include_adjacent=include_adjacent )
     rab_plus = rabs_center_points(rab, center_type = center_type)
     incoming_all = selecting_incoming_lines(rab_plus, edges, angle_threshold=angle_threshold)
     output = ext_lines_to_center(edges, incoming_all, rab_plus)
