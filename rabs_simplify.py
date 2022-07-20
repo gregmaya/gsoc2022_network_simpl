@@ -30,7 +30,7 @@ def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 
         rab_adj = gpd.sjoin(gdf, rab, predicate = 'intersects')
         rab_adj = rab_adj[rab_adj.area_right >= rab_adj.area_left]
         
-        dj_long_polys = []
+        adj_long_polys = []
         #iterate through original rabs
         for i, row in rab.iterrows():
             #creating a distance (diameter) for limiting the max dist of adjacent
