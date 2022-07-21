@@ -32,16 +32,19 @@ def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 
         
         adj_long_polys = []
         #iterate through original rabs
-        for i, row in rab.iterrows():
+        for row in rab.itertuples() :
             #creating a distance (diameter) for limiting the max dist of adjacent
-            minx, _ , maxx, _ = rab.loc[i].geometry.bounds 
+            minx, _ , maxx, _ = row.geometry.bounds 
             rab_diameter = maxx - minx
-            #iterating through the subgroup that could be affected
-            rab_group = rab_adj[rab_adj.index_right==i]
-            for ii, rrow in rab_group.iterrows():
-                hdist = rab.loc[i].geometry.hausdorff_distance(rrow.geometry)
+            
+            #creating the subgroup that could be affected
+            rab_group = rab_adj[rab_adj.index_right==row[0]]
+            for rrow in rab_group.itertuples():
+                hdist = row.geometry.hausdorff_distance(rrow.geometry)
+
                 if hdist > rab_diameter :
-                    adj_long_polys.append(ii) #if hausdorff_distance is larger than the diameter add to list
+                    adj_long_polys.append(rrow[0]) #if hausdorff_distance is larger than the diameter add to list
+           
         rab_plus = rab_adj.drop(adj_long_polys)
         
     else:
