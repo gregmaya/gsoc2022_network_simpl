@@ -57,21 +57,29 @@ def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 
 
 def rabs_center_points(gdf, center_type = 'centroid'):
     """
-From a selection of round abouts, returns an aggregated GeoDataFrame 
-per round about with extra column with center_type. 
+    From a selection of round abouts, returns an aggregated GeoDataFrame 
+    per round about with extra column with center_type. 
 
-center_type, str
-    
-    - centroid : (default) of the actual circleof each roundabout
-    - mean:  mean point of node geometries that make up polygons
-    - minimum_bounding_circle : TBD
+    center_type, str
 
-Return
-________
-GeoDataFrame
-"""
- #dissolving into a single geometry per round about
-    rab_plus = gdf.dissolve(by = 'index_right')
+        - centroid : (default) of the actual circleof each roundabout
+        - mean:  mean point of node geometries that make up polygons
+        - minimum_bounding_circle : TBD
+
+    Return
+    ________
+    GeoDataFrame
+    """
+    #creating a multipolygon per RAB (as opposed to dissolving) of the entire composition of the RAB
+    # temporary DataFrame where geometries is the array of pygeos geometries
+    # for aggregation to work properly
+    tmp = pd.DataFrame(gdf.copy())
+    tmp['geometry'] = tmp.geometry.values.data
+
+    rab_plus = gpd.GeoDataFrame(
+            tmp.groupby('index_right').geometry.apply(multipolygons).rename('geometry'), crs= gdf.crs)
+    # verifying that all geometries are valid
+    rab_plus['geometry'] = results.apply(lambda row : make_valid(row.geometry) if not row.geometry.is_valid else row.geometry, axis = 1)
     
     if center_type == 'centroid' :
         #geometry centroid of the actual circle
