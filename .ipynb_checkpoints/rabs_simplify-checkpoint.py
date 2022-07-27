@@ -3,6 +3,9 @@ import pandas as pd
 import geopandas as gpd
 from shapely.ops import linemerge
 from shapely import geometry
+from shapely.validation import make_valid
+from pygeos import multipolygons
+
 import momepy as mm # outp
 
 def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 0.85, include_adjacent=True) :
@@ -79,7 +82,7 @@ def rabs_center_points(gdf, center_type = 'centroid'):
     rab_plus = gpd.GeoDataFrame(
             tmp.groupby('index_right').geometry.apply(multipolygons).rename('geometry'), crs= gdf.crs)
     # verifying that all geometries are valid
-    rab_plus['geometry'] = results.apply(lambda row : make_valid(row.geometry) if not row.geometry.is_valid else row.geometry, axis = 1)
+    rab_plus['geometry'] = rab_plus.apply(lambda row : make_valid(row.geometry) if not row.geometry.is_valid else row.geometry, axis = 1)
     
     if center_type == 'centroid' :
         #geometry centroid of the actual circle
