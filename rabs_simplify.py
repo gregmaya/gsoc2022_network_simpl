@@ -8,11 +8,10 @@ from pygeos import multipolygons
 
 import momepy as mm # outp
 
-def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 0.85, include_adjacent=True) :
+def _selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 0.85, include_adjacent=True) :
     """
     From a GeoDataFrame of polygons, returns a GDF of polygons that are 
-    above the CircularCompaactness threshold as well as those adjacent ones samller in area
-    that make up for a combined roundabout to be corrected
+    above the Circular Compaactness threshold.
     
     Return
     ________
@@ -58,20 +57,10 @@ def selecting_rabs_from_poly(gdf, circom_threshold = 0.7, perc_area_threshold = 
     
     return rab_plus
 
-def rabs_center_points(gdf, center_type = 'centroid'):
+def _rabs_center_points(gdf, center_type = 'centroid'):
     """
     From a selection of round abouts, returns an aggregated GeoDataFrame 
     per round about with extra column with center_type. 
-
-    center_type, str
-
-        - centroid : (default) of the actual circleof each roundabout
-        - mean:  mean point of node geometries that make up polygons
-        - minimum_bounding_circle : TBD
-
-    Return
-    ________
-    GeoDataFrame
     """
     #creating a multipolygon per RAB (as opposed to dissolving) of the entire composition of the RAB
     # temporary DataFrame where geometries is the array of pygeos geometries
@@ -103,8 +92,11 @@ def rabs_center_points(gdf, center_type = 'centroid'):
     
     return rab_plus
 
-def coins_filtering_many_incoming(incoming_many, angle_threshold=0):
-    # From multiple incoming lines 
+def _coins_filtering_many_incoming(incoming_many, angle_threshold=0):
+    """
+    Used only for the cases when more than one incoming line touches the
+    roundabout.
+    """
     # figuring out which one needs to be extended and retain attributes
     coins_filter_result = []
     # For each new connection, evaluate COINS and selecet the group from which the new line belongs
@@ -130,8 +122,12 @@ def coins_filtering_many_incoming(incoming_many, angle_threshold=0):
     incoming_many_reduced = incoming_many.loc[coins_filter_result]
     return incoming_many_reduced
 
-def selecting_incoming_lines (rab_plus, edges, angle_threshold=0):
-    # selecting only the lines that are touching but not covered_by
+def _selecting_incoming_lines (rab_plus, edges, angle_threshold=0):
+    """Selecting only the lines that are touching but not covered by
+    the ``rab_plus``.
+    If more than one LineString is incoming to ``rab_plus``, COINS algortthm
+    is used to select the line to be extended further.
+    """
     # Feels a bit combersome ... Ideally there would be a DISJOINT predicate
     incoming = edges.sjoin(rab_plus , predicate = 'touches')
     incoming.rename(columns ={'index_right':'index_rab_plus'}, inplace = True )
@@ -162,13 +158,20 @@ def selecting_incoming_lines (rab_plus, edges, angle_threshold=0):
     incoming_ones = pd.merge(incoming, filter_count_one, left_on='line_wkt', right_index=True, how= 'inner')
     incoming_many = pd.merge(incoming, filter_count_many, left_on='line_wkt', right_index=True, how= 'inner')
 
-    incoming_many_reduced = coins_filtering_many_incoming(incoming_many, angle_threshold=angle_threshold)
+    incoming_many_reduced = _coins_filtering_many_incoming(incoming_many, angle_threshold=angle_threshold)
     incoming_all = gpd.GeoDataFrame(pd.concat([ incoming_ones, incoming_many_reduced]), crs = edges.crs)
     
     return incoming_all
 
-def ext_lines_to_center(edges, incoming_all, rab_plus):
-    # updating the original geometry 
+def _ext_lines_to_center(edges, incoming_all, rab_plus):
+    """Extends the Linestrings geometrie to the centerpoint defined by _rabs_center_points.
+    Also deleted the lines that originally defined the roundabout.
+    
+    Returns
+    -------
+    GeoDataFrame
+        GeoDataFrame of with updated geometry
+    """
     ## this is causing a warning too for Shapely 2.0 --> Convert the '.coords' to a numpy array
     incoming_all['geometry'] = incoming_all.apply(lambda row: linemerge([row.geometry, row.line]), axis =1)
 
@@ -188,13 +191,53 @@ def ext_lines_to_center(edges, incoming_all, rab_plus):
 def roundabout_simpl(edges, polys, 
                      circom_threshold = 0.7, perc_area_threshold = 0.85, include_adjacent=True, 
                      center_type = 'centroid', angle_threshold=0):
+    """Selects the roundabouts from ``polys`` to create a center point to merge all
+    incoming edges.
     
-    rab = selecting_rabs_from_poly(polys, 
+    All ``edges`` attributes are preserved and geometries which belong to the selected
+    roundabouts are deleted.
+
+    If ``include_adjacent`` is passed, adjacent polygons to the actual roundabout are
+    also selected for simplification if two conditions are met:
+        - the area of adjacent polygons is less than the actual roundabout
+        - adjacent polygons do not extend beyond the diameter of the actual roundabout.
+        This uses hausdorff_distance algorithm. 
+
+    Parameters
+    ----------
+    edges : GeoDataFrame
+        GeoDataFrame containing LineString geometry of urban network
+    polys : GeoDataFrame
+        GeoDataFrame containing Polygon geometry derived from polygonyzing ``edges`` GeoDataFrame
+    circom_threshold : float (default 0.7)
+        Circular compactness threshold to select round abouts from ``polys`` GeoDataFrame.
+        Polygons with a higher or equal threshold value will be considered for simplification.
+    perc_area_threshold : float (default 0.85)
+        Percentile threshold value from the area of ``polys`` to leave as input geometry.
+        Polygons with a higher or equal threshold will be considered as urban blocks not considered
+        for simmplification.
+    include_adjacent : boolean (default True)
+        Adjacent polygons to be considered also as part of the simplification.
+    center_type : string (default 'centroid')
+        Method to use for converging the incoming LineStrings.
+        Current list of options available : 'centroid', 'mean'.
+    angle_threshold : int, float (default 0)
+        The angle threshold for the COINS algorithm. Only used when multiple incoming LineStrings
+        arrive in the same location to the roundabout and/or to the adjacent polygons if set as True.
+        Segments will only be considered a part of the same street if the deflection angle
+        is above the threshold.
+
+    Returns
+    -------
+    GeoDataFrame
+        GeoDataFrame of with updated geometry
+    """
+    rab = _selecting_rabs_from_poly(polys, 
                                    circom_threshold = circom_threshold,
                                    perc_area_threshold = perc_area_threshold,
                                    include_adjacent=include_adjacent )
-    rab_plus = rabs_center_points(rab, center_type = center_type)
-    incoming_all = selecting_incoming_lines(rab_plus, edges, angle_threshold=angle_threshold)
-    output = ext_lines_to_center(edges, incoming_all, rab_plus)
+    rab_plus = _rabs_center_points(rab, center_type = center_type)
+    incoming_all = _selecting_incoming_lines(rab_plus, edges, angle_threshold=angle_threshold)
+    output = _ext_lines_to_center(edges, incoming_all, rab_plus)
     
     return output
