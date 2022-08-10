@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely.ops import linemerge
-from shapely import geometry
+from shapely.geometry import Point
 from shapely.validation import make_valid
 from pygeos import multipolygons
 
