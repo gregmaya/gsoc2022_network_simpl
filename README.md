@@ -15,7 +15,7 @@ This repository contains data, notebooks and general work in progress to the dev
 
 
 ## Pull Requests (PR)
-- geometry-based simplification of roundabouts (#371) [https://github.com/pysal/momepy/pull/371] 
+- [geometry-based simplification of roundabouts #371](https://github.com/pysal/momepy/pull/371)
 
 
 ## Important links
