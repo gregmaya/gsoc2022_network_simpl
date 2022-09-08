@@ -13,10 +13,16 @@ This repository contains data, notebooks and general work in progress to the dev
 
 ## Next Steps
 
-
 ## Pull Requests (PR)
 - [geometry-based simplification of roundabouts #371](https://github.com/pysal/momepy/pull/371)
 
+## Flowcharts
+Althought, quite certainly some processes and methods are likely to change, the following are some suggestions to achieve a simplified road network mainly aimed for urban morpholocical analysis.
+### Detailed suggested flowchart
+![alt text](https://github.com/gregmaya/gsoc2022_network_simpl/blob/main/flowchart_1.png)
+*_poly_center_line() : is expected to wrap/develop the [processes teste](https://github.com/martinfleis/network_simplification) by [@martinfleis](https://github.com/martinfleis)
+### Summary suggested flowchart
+![alt text](https://github.com/gregmaya/gsoc2022_network_simpl/blob/main/flowchart_2.png)
 
 ## Important links
 - [Tests for roadcenterline](https://github.com/martinfleis/network_simplification) by [@martinfleis](https://github.com/martinfleis)
