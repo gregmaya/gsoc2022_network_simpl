@@ -1,7 +1,7 @@
 
 # Geometry Based network simplification
 ## Project Summary
-*_Part of GSoC2022 / PySAL / momepy_*
+*[_Part of GSoC2022 / PySAL / momepy_](https://summerofcode.withgoogle.com/proposals/details/CgXX3BjY)*
 
 The aim of this project was to explore different routes for simplifying a road network (mostly) for morphological analysis. My specific approcah was soley on geometry based operations. In summary, one PR has been merged into the main momepy code and has set the grounds of some further explorations; some of which have also made tier way into draft PRs that will be further developed past official end of GSOC2022. The accepted code was approached on the basis of developing a solution that is not only source agnostic, but also scallable. The main logic has been set by a combination of ideas by all parties; from the starting idea of polygonizing the network to the application of COINS algorithms, all the way to grouping adjacent error areas or even using the developed logic to rethinking remaining errors… it all has been a group effort by the whole team (see [agknowledgements](##agknowledgements) below). 
 
@@ -15,8 +15,8 @@ Admittedly, I would have liked to had more tangible results. Fortunately, as pro
 
 ## Repo file structure
 This repository contains data, notebooks and general work in progress to the development of methods for road network simplifications.
-- */data* : containing files used for testing.
-- */exploratory_notebooks* : Jupyter Notebooks where the tests and debbugging where performed.
+- */[data](https://github.com/gregmaya/gsoc2022_network_simpl/tree/main/data)* : containing files used for testing.
+- */[exploratory_notebooks](https://github.com/gregmaya/gsoc2022_network_simpl/tree/main/exploratory_notebooks)* : Jupyter Notebooks where the tests and debbugging where performed.
 - *_others_* : including licence, .py files (with self contained functions), cache etc.
 
 ## Next Steps
