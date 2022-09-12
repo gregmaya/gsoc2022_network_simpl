@@ -24,6 +24,7 @@ This repository contains data, notebooks and general work in progress to the dev
 ## Pull Requests (PR)
 - [geometry-based simplification of roundabouts #371](https://github.com/pysal/momepy/pull/371)
 - [example notebook for roundabout simplification #392](https://github.com/pysal/momepy/pull/392)
+- [helper functions for single complex junctions](https://github.com/pysal/momepy/pull/396)
 
 ## Flowcharts
 Althought, quite certainly some processes and methods are likely to change, the following are some suggestions to achieve a simplified road network mainly aimed for urban morpholocical analysis.
