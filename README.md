@@ -20,14 +20,31 @@ This repository contains data, notebooks and general work in progress to the dev
 - *_others_* : including licence, .py files (with self contained functions), cache etc.
 
 ## Next Steps
+As mentioned earlier, the main focus of this project was on a geometry based solution. Therefore, an obvious next step is to combine the results with solutions that are network conscious (the likes of those developed in parallel by [@gagostini](https://github.com/gsagostini) [here](https://github.com/pysal/momepy/pull/377) or [cityseer](https://cityseer.benchmarkurbanism.com/guide#graph-cleaning) by [Gareth Simons](https://github.com/songololo) ). 
+
+However, there are still geometry solutions that would complement the methods merged up to this point. 
+Currently [momepy.roundabout_simplification()](http://docs.momepy.org/en/latest/generated/momepy.roundabout_simplification.html?highlight=momepy.roundabout_simplification) has two known issues: 
+- Filtering out false negatives:
+  - Suggestion: consider using [COINS](https://docs.momepy.org/en/stable/generated/momepy.COINS.html?highlight=COINS#momepy.COINS) as well as the current [Circular Compactness](https://docs.momepy.org/en/stable/generated/momepy.CircularCompactness.html) to determine the roundabouts that are either not round enough or cut by other roads.
+- Not considering all adjacent polygons
+  - Suggestion: replace the current selection of adjacent roundabouts with one that uses the number of forming edges. This is likely to have a greater success rate given that most of those areas are ‘triangle-like’ and not necessarily smaller than the actual roundabout
+> Note: It is expected that this method need revising to leverage the vectorization advantages of Shapely 2.0
+
+A natural transition for improvement could be to the full development of what could be summarised under the term **“complex junctions”**; i.e. junctions that in traffic the representation of street networks create additional nodes (and edges) that distor the results when doing morphological analysis. The suggested approach for dealing with some of these cases could be brielfy summarised with two main attributes:
+- Single & grouped polygons: resulting road network polygons that after classified as ‘invalid’ (see __selecting_invalid_polys() in [PR #396](https://github.com/pysal/momepy/pull/396) ) are either alone or touching other polygons
+- The number of forming edges: Different to exploding the polygons’ outer ring, this is an attribute of the number of edges that originally formed each invalid polygon.
+Said classification could help to identify different geometric solutions that would complement the toolbox for simplification.
+
+Finally, one must mention that up to this point one of the most challenging problems to solve is the issue of parallel streets. For that, its suggested to investigate a route that combines the grouping of invalid polygons describes above with the [voronoi centerline experiments](https://github.com/martinfleis/network_simplification) by [@martinfleis](https://github.com/martinfleis)
+ done previously. The hypothesis is that by creating a single polygon per group one could simplify their geometries into a single centerline that connectad the upcoming edges. All this is likely to be one of the last steps after solving the some of the other single issues.
 
 ## Pull Requests (PR)
 - [geometry-based simplification of roundabouts #371](https://github.com/pysal/momepy/pull/371)
 - [example notebook for roundabout simplification #392](https://github.com/pysal/momepy/pull/392)
-- [helper functions for single complex junctions](https://github.com/pysal/momepy/pull/396)
+- [helper functions for single complex junctions #396](https://github.com/pysal/momepy/pull/396)
 
 ## Flowcharts
-Althought, quite certainly some processes and methods are likely to change, the following are some suggestions to achieve a simplified road network mainly aimed for urban morpholocical analysis.
+Althought, quite certainly some processes and methods are likely to change, the following are some suggestions to achieve a simplified road network mainly using a geometry approach described above.
 
 ### Detailed suggested flowchart
 ![alt text](https://github.com/gregmaya/gsoc2022_network_simpl/blob/main/flowchart_1.png)
@@ -35,6 +52,3 @@ Althought, quite certainly some processes and methods are likely to change, the 
 
 ### Summary suggested flowchart
 ![alt text](https://github.com/gregmaya/gsoc2022_network_simpl/blob/main/flowchart_2.png)
-
-## Important links
-- [Tests for roadcenterline](https://github.com/martinfleis/network_simplification) by [@martinfleis](https://github.com/martinfleis)
