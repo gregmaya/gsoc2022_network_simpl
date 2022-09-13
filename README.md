@@ -31,7 +31,7 @@ Currently [momepy.roundabout_simplification()](http://docs.momepy.org/en/latest/
 > Note: It is expected that this method need revising to leverage the vectorization advantages of Shapely 2.0
 
 A natural transition for improvement could be to the full development of what could be summarised under the term **“complex junctions”**; i.e. junctions that in traffic the representation of street networks create additional nodes (and edges) that distor the results when doing morphological analysis. The suggested approach for dealing with some of these cases could be brielfy summarised with two main attributes:
-- Single & grouped polygons: resulting road network polygons that after classified as ‘invalid’ (see __selecting_invalid_polys() in [PR #396](https://github.com/pysal/momepy/pull/396) ) are either alone or touching other polygons
+- Single & grouped polygons: resulting road network polygons that after classified as ‘invalid’ (see `_selecting_invalid_polys()` in [PR #396](https://github.com/pysal/momepy/pull/396) ) are either alone or touching other polygons
 - The number of forming edges: Different to exploding the polygons’ outer ring, this is an attribute of the number of edges that originally formed each invalid polygon.
 Said classification could help to identify different geometric solutions that would complement the toolbox for simplification.
 
